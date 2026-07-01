@@ -1,0 +1,8 @@
+.data
+src/vendor
+src/node_modules
+src/storage/logs/*
+src/storage/framework/cache/*
+src/storage/framework/sessions/*
+src/storage/framework/views/*
+src/.git

@@ -1,0 +1,11 @@
+# Docker data volumes
+.data/
+
+# IDE
+.idea/
+.vscode/
+.impeccable/
+
+# Docker Compose local overrides and secrets
+.env
+docker-compose.override.yml
