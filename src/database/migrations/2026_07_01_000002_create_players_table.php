@@ -13,7 +13,7 @@ class CreatePlayersTable extends Migration
             $table->string('email')->nullable();
             $table->timestamps();
 
-            $table->index('email');
+            $table->unique('email');
         });
     }
 

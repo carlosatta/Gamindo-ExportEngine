@@ -52,4 +52,9 @@ class Version extends Model
     {
         return $this->hasMany(ExportRequest::class);
     }
+
+    public function exportTemplates()
+    {
+        return $this->hasMany(ExportTemplate::class);
+    }
 }
