@@ -33,11 +33,18 @@ async function createVersion() {
 async function bulkIngest(versionId, entity, file) {
   const payload = loadJson(file);
   if (payload === null) {
-    return;
+    return null;
   }
-  step(`Inserimento massivo ${entity} (${payload.length})`);
+  console.log(`  [${entity}] invio ${payload.length} record`);
+  const started = Date.now();
   const { status, data } = await request("POST", `/versions/${versionId}/${entity}`, payload);
-  console.log(`  HTTP ${status} -> ${summary(data)}`);
+  console.log(`  [${entity}] HTTP ${status} (${Date.now() - started}ms) -> ${summary(data)}`);
+  return { entity, status, data };
+}
+
+async function bulkIngestParallel(versionId, items) {
+  step(`Ingestione in parallelo: ${items.map((i) => i[0]).join(", ")}`);
+  return Promise.all(items.map(([entity, file]) => bulkIngest(versionId, entity, file)));
 }
 
 async function createTemplate() {
@@ -192,6 +199,7 @@ async function downloadExport(exportId) {
 module.exports = {
   createVersion,
   bulkIngest,
+  bulkIngestParallel,
   createTemplate,
   requestExport,
   requestExportFromTemplate,
