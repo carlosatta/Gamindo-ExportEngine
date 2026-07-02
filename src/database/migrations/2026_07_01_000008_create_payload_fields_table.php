@@ -12,7 +12,7 @@ class CreatePayloadFieldsTable extends Migration
             $table->id();
             $table->foreignId('version_id')->constrained('versions');
             $table->string('entity_type', 50);
-            $table->string('event_type', 100)->nullable();
+            $table->string('event_type', 100)->default('');
             $table->string('code');
             $table->string('label')->nullable();
             $table->string('data_type', 30);

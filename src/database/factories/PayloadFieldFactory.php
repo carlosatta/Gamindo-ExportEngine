@@ -15,7 +15,7 @@ class PayloadFieldFactory extends Factory
         return [
             'version_id' => Version::factory(),
             'entity_type' => 'event',
-            'event_type' => null,
+            'event_type' => '',
             'code' => $this->faker->unique()->word(),
             'label' => $this->faker->words(2, true),
             'data_type' => 'integer',

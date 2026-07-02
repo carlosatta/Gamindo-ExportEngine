@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\PayloadField;
 use App\Models\Player;
 use App\Models\Version;
 use App\Models\VersionPlayer;
@@ -55,6 +56,27 @@ class DatabaseSchemaTest extends TestCase
             'version_id' => $version->id,
             'player_id' => $player->id,
             'external_player_id' => 'ext-2',
+        ]);
+    }
+
+    public function test_payload_field_unique_blocks_duplicate_generic_event_type()
+    {
+        $version = Version::factory()->create();
+
+        PayloadField::factory()->create([
+            'version_id' => $version->id,
+            'entity_type' => 'event',
+            'event_type' => '',
+            'code' => 'score',
+        ]);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        PayloadField::factory()->create([
+            'version_id' => $version->id,
+            'entity_type' => 'event',
+            'event_type' => '',
+            'code' => 'score',
         ]);
     }
 }
