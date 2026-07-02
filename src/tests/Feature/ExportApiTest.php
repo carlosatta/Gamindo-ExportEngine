@@ -21,7 +21,7 @@ class ExportApiTest extends TestCase
         return [
             'format' => 'xlsx',
             'sheets' => [
-                ['name' => 'Players', 'columns' => ['email']],
+                ['name' => 'version_players', 'columns' => ['external_player_id', 'status']],
             ],
         ];
     }
@@ -59,6 +59,15 @@ class ExportApiTest extends TestCase
         $this->getJson("/api/v1/exports/{$export->id}")
             ->assertStatus(200)
             ->assertJsonPath('data.status', 'pending');
+    }
+
+    public function test_list_all_exports()
+    {
+        ExportRequest::factory()->count(3)->create();
+
+        $this->getJson('/api/v1/exports')
+            ->assertStatus(200)
+            ->assertJsonCount(3, 'data');
     }
 
     public function test_download_not_ready_returns_404()
@@ -113,6 +122,32 @@ class ExportApiTest extends TestCase
         $this->assertEquals('completed', $export->status);
         $this->assertEquals(100, $export->progress);
         $this->assertNotNull($export->file_path);
+        Storage::assertExists($export->file_path);
+    }
+
+    public function test_job_tolerates_unknown_sheet_and_columns()
+    {
+        Storage::fake('local');
+        $version = Version::factory()->create();
+        $player = Player::factory()->create();
+        VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
+
+        $export = ExportRequest::factory()->create([
+            'version_id' => $version->id,
+            'status' => 'pending',
+            'request_payload' => [
+                'format' => 'xlsx',
+                'sheets' => [
+                    ['name' => 'bogus_table', 'columns' => ['whatever']],
+                    ['name' => 'version_players', 'columns' => ['external_player_id', 'ghost_column']],
+                ],
+            ],
+        ]);
+
+        (new GenerateExportJob($export->id))->handle();
+
+        $export->refresh();
+        $this->assertEquals('completed', $export->status);
         Storage::assertExists($export->file_path);
     }
 }

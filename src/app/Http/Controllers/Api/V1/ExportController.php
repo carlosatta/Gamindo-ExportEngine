@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ExportController extends Controller
 {
+    public function all()
+    {
+        return ExportResource::collection(
+            ExportRequest::query()->latest()->paginate(15)
+        );
+    }
+
     public function index(Version $version)
     {
         return ExportResource::collection(

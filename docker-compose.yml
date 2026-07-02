@@ -35,7 +35,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     restart: unless-stopped
-    entrypoint: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--timeout=120", "--max-jobs=1000"]
+    entrypoint: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--timeout=360", "--max-jobs=1000"]
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-true}

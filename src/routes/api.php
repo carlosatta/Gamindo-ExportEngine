@@ -28,6 +28,7 @@ Route::prefix('v1')->group(function () {
         Route::post('exports/from-template', [ExportController::class, 'fromTemplate']);
     });
 
+    Route::get('exports', [ExportController::class, 'all']);
     Route::get('exports/{export}', [ExportController::class, 'show']);
     Route::get('exports/{export}/download', [ExportController::class, 'download']);
     Route::delete('exports/{export}', [ExportController::class, 'destroy']);

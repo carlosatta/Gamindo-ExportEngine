@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\ExportRequest;
-use App\Models\VersionPlayer;
+use App\Services\Export\EntityRegistry;
+use App\Services\Export\ExportQueryBuilder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
 
@@ -18,7 +20,7 @@ class GenerateExportJob implements ShouldQueue
 
     public $tries = 7;
 
-    public $timeout = 120;
+    public $timeout = 360;
 
     private $exportId;
 
@@ -98,43 +100,95 @@ class GenerateExportJob implements ShouldQueue
     private function generate(ExportRequest $export): string
     {
         $version = $export->version;
+        $payload = $export->request_payload ?? [];
+        $sheets = $payload['sheets'] ?? [];
+        $dateFrom = $payload['date_from'] ?? null;
+        $dateTo = $payload['date_to'] ?? null;
+
         Storage::makeDirectory('exports');
         $relative = 'exports/export-'.$export->id.'.xlsx';
 
         $writer = WriterEntityFactory::createXLSXWriter();
         $writer->openToFile(Storage::path($relative));
 
-        $writer->getCurrentSheet()->setName('README');
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['Export Engine']));
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['version_id', $version->id]));
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['version_name', $version->name]));
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['generated_at', now()->toIso8601String()]));
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['format', $export->format]));
+        $builder = new ExportQueryBuilder();
+        $usedNames = [];
 
-        $sheet = $writer->addNewSheetAndMakeItCurrent();
-        $sheet->setName('Players');
-        $writer->addRow(WriterEntityFactory::createRowFromArray(['email', 'external_player_id', 'status', 'registered_at']));
-
-        $query = VersionPlayer::where('version_id', $version->id)->with('player');
-        $total = (clone $query)->count();
-        $done = 0;
-
-        foreach ($query->lazy(500) as $versionPlayer) {
-            $writer->addRow(WriterEntityFactory::createRowFromArray([
-                optional($versionPlayer->player)->email,
-                $versionPlayer->external_player_id,
-                $versionPlayer->status,
-                $versionPlayer->registered_at ? $versionPlayer->registered_at->toIso8601String() : null,
-            ]));
-
-            $done++;
-            if ($total > 0 && $done % 200 === 0) {
-                $export->update(['progress' => (int) min(95, floor($done / $total * 95))]);
+        $plans = [];
+        $totalRows = 0;
+        foreach ($sheets as $sheetConfig) {
+            $built = is_array($sheetConfig) ? $builder->build($version, $sheetConfig, $dateFrom, $dateTo) : null;
+            if ($built === null) {
+                continue;
             }
+            $count = DB::table(EntityRegistry::get($built['name'])['table'])
+                ->where('version_id', $version->id)
+                ->count();
+            $plans[] = ['built' => $built, 'count' => $count];
+            $totalRows += $count;
+        }
+        $totalRows = max(1, $totalRows);
+
+        $progress = $this->progressConnection();
+        $pdo = DB::connection()->getPdo();
+        $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+        try {
+            $written = 0;
+            $done = 0;
+            foreach ($plans as $plan) {
+                $built = $plan['built'];
+                $currentSheet = $written === 0
+                    ? $writer->getCurrentSheet()
+                    : $writer->addNewSheetAndMakeItCurrent();
+                $currentSheet->setName($this->sheetName($built['name'], $usedNames));
+                $writer->addRow(WriterEntityFactory::createRowFromArray($built['headers']));
+
+                foreach ($built['query']->cursor() as $row) {
+                    $values = [];
+                    foreach ($built['keys'] as $key) {
+                        $values[] = $row->{$key} ?? null;
+                    }
+                    $writer->addRow(WriterEntityFactory::createRowFromArray($values));
+
+                    $done++;
+                    if ($done % 5000 === 0) {
+                        $progress->table('export_requests')
+                            ->where('id', $export->id)
+                            ->update(['progress' => (int) min(95, floor($done / $totalRows * 95))]);
+                    }
+                }
+
+                $written++;
+            }
+        } finally {
+            $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
         }
 
         $writer->close();
 
         return $relative;
+    }
+
+    private function progressConnection()
+    {
+        $name = 'export_progress';
+        config(['database.connections.'.$name => config('database.connections.'.config('database.default'))]);
+
+        return DB::connection($name);
+    }
+
+    private function sheetName(string $name, array &$usedNames): string
+    {
+        $base = substr($name, 0, 31);
+        $candidate = $base;
+        $suffix = 2;
+        while (in_array($candidate, $usedNames, true)) {
+            $candidate = substr($base, 0, 29).'_'.$suffix;
+            $suffix++;
+        }
+        $usedNames[] = $candidate;
+
+        return $candidate;
     }
 }
