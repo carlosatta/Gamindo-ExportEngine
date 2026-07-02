@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-
-class TestSeeder extends Seeder
+class TestSeeder extends DataSeeder
 {
     public function run()
     {
+        $this->seedData(2, 200, 20);
     }
 }
