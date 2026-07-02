@@ -4,10 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
+class DemoSeeder extends Seeder
 {
     public function run()
     {
-        $this->call(DevSeeder::class);
     }
 }
