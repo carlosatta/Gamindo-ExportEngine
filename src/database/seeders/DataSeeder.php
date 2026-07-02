@@ -147,12 +147,10 @@ abstract class DataSeeder extends Seeder
     private function createEventsWithPayload(int $versionId, array $versionPlayers, int $eventsPerPlayer, array $fields, string $now)
     {
         $types = ['opened', 'registered', 'completed', 'answer_submitted'];
-        $rotating = ['level', 'difficulty_rating', 'language', 'utm_source', 'is_winner', 'last_action_at', 'note'];
         $rows = [];
         $total = 0;
-        $rotate = 0;
 
-        $flush = function () use (&$rows, &$rotate, $versionId, $fields, $rotating, $now) {
+        $flush = function () use (&$rows, $versionId, $fields, $now) {
             if (empty($rows)) {
                 return;
             }
@@ -165,13 +163,18 @@ abstract class DataSeeder extends Seeder
             $values = [];
 
             foreach ($eventIds as $eventId) {
-                $values[] = $this->payloadValueRow($versionId, $fields['score'], $eventId, $now);
-                $code = $rotating[$rotate % count($rotating)];
-                $values[] = $this->payloadValueRow($versionId, $fields[$code], $eventId, $now);
-                $rotate++;
+                foreach ($fields as $field) {
+                    $values[] = $this->payloadValueRow($versionId, $field, $eventId, $now);
+                    if (count($values) >= $this->chunkSize) {
+                        DB::table('payload_values')->insert($values);
+                        $values = [];
+                    }
+                }
             }
 
-            DB::table('payload_values')->insert($values);
+            if (! empty($values)) {
+                DB::table('payload_values')->insert($values);
+            }
         };
 
         foreach ($versionPlayers as $vp) {
