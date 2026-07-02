@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\V1\VersionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    Route::get('versions', [VersionController::class, 'index']);
     Route::post('versions', [VersionController::class, 'store']);
+    Route::get('versions/{version}', [VersionController::class, 'show']);
 
     Route::prefix('versions/{version}')->group(function () {
         Route::post('players', [PlayerController::class, 'store']);
