@@ -10,7 +10,7 @@ class CreatePlayersTable extends Migration
     {
         Schema::create('players', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->nullable();
+            $table->string('email');
             $table->timestamps();
 
             $table->unique('email');
