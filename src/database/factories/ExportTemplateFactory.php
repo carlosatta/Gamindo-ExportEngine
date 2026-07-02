@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\ExportTemplate;
-use App\Models\Version;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ExportTemplateFactory extends Factory
@@ -13,7 +12,6 @@ class ExportTemplateFactory extends Factory
     public function definition()
     {
         return [
-            'version_id' => Version::factory(),
             'name' => $this->faker->words(2, true),
             'request_payload' => [
                 'format' => 'xlsx',

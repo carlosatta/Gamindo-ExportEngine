@@ -10,7 +10,6 @@ class ExportTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'version_id',
         'name',
         'request_payload',
     ];
@@ -18,9 +17,4 @@ class ExportTemplate extends Model
     protected $casts = [
         'request_payload' => 'array',
     ];
-
-    public function version()
-    {
-        return $this->belongsTo(Version::class);
-    }
 }

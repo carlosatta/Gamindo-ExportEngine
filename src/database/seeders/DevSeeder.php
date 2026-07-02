@@ -36,9 +36,9 @@ class DevSeeder extends Seeder
                     Reward::factory()->create($this->owner($version, $player, $versionPlayer));
                 }
             });
-
-            ExportTemplate::factory()->create(['version_id' => $version->id]);
         });
+
+        ExportTemplate::factory()->count(2)->create();
     }
 
     private function createPayloadFields(Version $version)

@@ -10,7 +10,6 @@ class CreateExportTemplatesTable extends Migration
     {
         Schema::create('export_templates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('version_id')->constrained('versions');
             $table->string('name');
             $table->longText('request_payload');
             $table->timestamps();
