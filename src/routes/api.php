@@ -1,19 +1,38 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\ExportController;
+use App\Http\Controllers\Api\V1\Ingestion\AnswerController;
+use App\Http\Controllers\Api\V1\Ingestion\EventController;
+use App\Http\Controllers\Api\V1\Ingestion\PlayerController;
+use App\Http\Controllers\Api\V1\Ingestion\RewardController;
+use App\Http\Controllers\Api\V1\Ingestion\TransactionController;
+use App\Http\Controllers\Api\V1\TemplateController;
+use App\Http\Controllers\Api\V1\VersionController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+Route::prefix('v1')->group(function () {
+    Route::post('versions', [VersionController::class, 'store']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    Route::prefix('versions/{version}')->group(function () {
+        Route::post('players', [PlayerController::class, 'store']);
+        Route::post('events', [EventController::class, 'store']);
+        Route::post('transactions', [TransactionController::class, 'store']);
+        Route::post('answers', [AnswerController::class, 'store']);
+        Route::post('rewards', [RewardController::class, 'store']);
+
+        Route::get('exports', [ExportController::class, 'index']);
+        Route::post('exports', [ExportController::class, 'store']);
+        Route::post('exports/preview', [ExportController::class, 'preview']);
+        Route::post('exports/from-template', [ExportController::class, 'fromTemplate']);
+    });
+
+    Route::get('exports/{export}', [ExportController::class, 'show']);
+    Route::get('exports/{export}/download', [ExportController::class, 'download']);
+    Route::delete('exports/{export}', [ExportController::class, 'destroy']);
+
+    Route::get('templates', [TemplateController::class, 'index']);
+    Route::post('templates', [TemplateController::class, 'store']);
+    Route::get('templates/{template}', [TemplateController::class, 'show']);
+    Route::patch('templates/{template}', [TemplateController::class, 'update']);
+    Route::delete('templates/{template}', [TemplateController::class, 'destroy']);
 });
