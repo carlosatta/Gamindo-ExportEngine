@@ -1,0 +1,284 @@
+{
+  "info": {
+    "name": "Export Engine API",
+    "description": "API REST per ingestione dati statistici di versione ed export XLSX asincroni. Base path /api/v1.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" },
+    { "key": "version_id", "value": "1" },
+    { "key": "export_id", "value": "1" },
+    { "key": "template_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Versions",
+      "item": [
+        {
+          "name": "List versions",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/versions", "host": ["{{base_url}}"], "path": ["versions"] }
+          }
+        },
+        {
+          "name": "Create version",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Summer Campaign 2026\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions", "host": ["{{base_url}}"], "path": ["versions"] }
+          }
+        },
+        {
+          "name": "Show version",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ingestion",
+      "description": "Ogni endpoint accetta un oggetto singolo o un array. Risposta sempre HTTP 200 con status success o partial_success.",
+      "item": [
+        {
+          "name": "Ingest players",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"email\": \"player@example.com\",\n    \"language\": \"it\",\n    \"utm_source\": \"google\",\n    \"company\": \"Acme\",\n    \"marketing_optin\": true,\n    \"registered_at\": \"2026-07-01T10:00:00Z\",\n    \"status\": \"active\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/players", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "players"] }
+          }
+        },
+        {
+          "name": "Ingest events",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"type\": \"completed\",\n    \"occurred_at\": \"2026-07-01T10:05:00Z\",\n    \"payload\": {\n      \"score\": 100,\n      \"level\": 3,\n      \"language\": \"it\"\n    }\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/events", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "events"] }
+          }
+        },
+        {
+          "name": "Ingest transactions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"transaction_id\": \"txn-1\",\n    \"type\": \"purchase\",\n    \"amount\": 9.99,\n    \"currency\": \"EUR\",\n    \"occurred_at\": \"2026-07-01T10:10:00Z\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/transactions", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "transactions"] }
+          }
+        },
+        {
+          "name": "Ingest answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"question_id\": \"q1\",\n    \"question\": \"Favorite color?\",\n    \"answer\": \"blue\",\n    \"occurred_at\": \"2026-07-01T10:07:00Z\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/answers", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "answers"] }
+          }
+        },
+        {
+          "name": "Ingest rewards",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"reward_type\": \"coupon_10\",\n    \"reward_code\": \"SAVE10\",\n    \"assigned_at\": \"2026-07-01T10:12:00Z\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/rewards", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "rewards"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exports",
+      "item": [
+        {
+          "name": "List exports (version)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] }
+          }
+        },
+        {
+          "name": "Create export",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"date_from\": \"2026-06-01\",\n  \"date_to\": \"2026-07-01\",\n  \"sheets\": [\n    {\n      \"name\": \"Players\",\n      \"columns\": [\"email\", \"total_score\", \"events_count\"],\n      \"filters\": [],\n      \"sort\": [],\n      \"group_by\": [],\n      \"metrics\": []\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] }
+          }
+        },
+        {
+          "name": "Preview export",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    {\n      \"name\": \"Players\",\n      \"columns\": [\"email\", \"total_score\"],\n      \"filters\": [],\n      \"sort\": []\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports/preview", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports", "preview"] }
+          }
+        },
+        {
+          "name": "Create export from template",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template_id\": {{template_id}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports/from-template", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports", "from-template"] }
+          }
+        },
+        {
+          "name": "Show export",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/exports/{{export_id}}", "host": ["{{base_url}}"], "path": ["exports", "{{export_id}}"] }
+          }
+        },
+        {
+          "name": "Download export",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/exports/{{export_id}}/download", "host": ["{{base_url}}"], "path": ["exports", "{{export_id}}", "download"] }
+          }
+        },
+        {
+          "name": "Delete export",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/exports/{{export_id}}", "host": ["{{base_url}}"], "path": ["exports", "{{export_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "List templates",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
+          }
+        },
+        {
+          "name": "Create template",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Default players export\",\n  \"request_payload\": {\n    \"format\": \"xlsx\",\n    \"sheets\": [\n      {\n        \"name\": \"Players\",\n        \"columns\": [\"email\", \"total_score\", \"events_count\"]\n      }\n    ]\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
+          }
+        },
+        {
+          "name": "Show template",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
+          }
+        },
+        {
+          "name": "Update template",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Renamed template\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
+          }
+        },
+        {
+          "name": "Delete template",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
