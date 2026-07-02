@@ -43,6 +43,25 @@ class VersionPlayerResolver
         );
     }
 
+    public function register(Version $version, array $record): VersionPlayer
+    {
+        $player = Player::firstOrCreate(['email' => $record['email']]);
+        $attributes = $this->anagraphic($record, $player->id);
+        $externalId = $record['external_player_id'] ?? null;
+
+        if ($externalId !== null && $externalId !== '') {
+            return VersionPlayer::updateOrCreate(
+                ['version_id' => $version->id, 'external_player_id' => $externalId],
+                $attributes
+            );
+        }
+
+        return VersionPlayer::updateOrCreate(
+            ['version_id' => $version->id, 'player_id' => $player->id],
+            $attributes
+        );
+    }
+
     private function anagraphic(array $record, int $playerId): array
     {
         $fields = [
