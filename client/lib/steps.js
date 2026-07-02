@@ -69,14 +69,24 @@ async function createTemplate() {
 function exportBody() {
   return {
     format: "xlsx",
-    date_from: "2026-06-01",
-    date_to: "2026-07-01",
-    sheets: [{
-      name: "Players",
-      columns: ["email", "total_score", "events_count"],
-      filters: [],
-      sort: [],
-    }],
+    date_from: "2026-01-01",
+    date_to: "2026-12-31",
+    sheets: [
+      {
+        name: "version_players",
+        columns: ["external_player_id", "language", "status", "registered_at"],
+      },
+      {
+        name: "events",
+        columns: ["type", "occurred_at", "payload.score", "payload.level"],
+        filters: [{ field: "type", operator: "=", value: "completed" }],
+        sort: [{ field: "occurred_at", direction: "desc" }],
+      },
+      {
+        name: "transactions",
+        columns: ["transaction_id", "type", "amount", "currency", "occurred_at"],
+      },
+    ],
   };
 }
 

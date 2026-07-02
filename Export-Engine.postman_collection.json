@@ -138,6 +138,14 @@
       "name": "Exports",
       "item": [
         {
+          "name": "List all exports",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Accept", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/exports", "host": ["{{base_url}}"], "path": ["exports"] }
+          }
+        },
+        {
           "name": "List exports (version)",
           "request": {
             "method": "GET",
@@ -155,10 +163,27 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"format\": \"xlsx\",\n  \"date_from\": \"2026-06-01\",\n  \"date_to\": \"2026-07-01\",\n  \"sheets\": [\n    {\n      \"name\": \"Players\",\n      \"columns\": [\"email\", \"total_score\", \"events_count\"],\n      \"filters\": [],\n      \"sort\": [],\n      \"group_by\": [],\n      \"metrics\": []\n    }\n  ]\n}",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"date_from\": \"2026-01-01\",\n  \"date_to\": \"2026-12-31\",\n  \"sheets\": [\n    { \"name\": \"version_players\", \"columns\": [\"external_player_id\", \"language\", \"status\", \"registered_at\"] },\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"payload.score\"], \"filters\": [{ \"field\": \"type\", \"operator\": \"=\", \"value\": \"completed\" }], \"sort\": [{ \"field\": \"occurred_at\", \"direction\": \"desc\" }] }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] }
+          }
+        },
+        {
+          "name": "Create export (heavy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"player_id\", \"payload.score\", \"payload.level\", \"payload.language\", \"payload.difficulty_rating\", \"payload.is_winner\", \"payload.last_action_at\", \"payload.note\"] },\n    { \"name\": \"transactions\", \"columns\": [\"transaction_id\", \"type\", \"amount\", \"currency\", \"occurred_at\"] },\n    { \"name\": \"version_players\", \"columns\": [\"external_player_id\", \"language\", \"utm_source\", \"status\", \"registered_at\"] }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] },
+            "description": "Export pesante senza filtri (tutte le entita' + colonne payload) per testare il job lungo su dati demo (~500k eventi). Usare un version_id popolato dal DemoSeeder."
           }
         },
         {
@@ -171,7 +196,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    {\n      \"name\": \"Players\",\n      \"columns\": [\"email\", \"total_score\"],\n      \"filters\": [],\n      \"sort\": []\n    }\n  ]\n}",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"payload.score\"] }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports/preview", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports", "preview"] }
