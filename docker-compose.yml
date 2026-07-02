@@ -30,6 +30,30 @@ services:
     volumes:
       - ./src:/var/www
 
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    restart: unless-stopped
+    entrypoint: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--timeout=120", "--max-jobs=1000"]
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      DB_HOST: mysql
+      REDIS_HOST: redis
+      CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      DB_DATABASE: ${DB_DATABASE:-export_engine}
+      DB_USERNAME: ${DB_USERNAME:-export_engine}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      - app
+      - mysql
+      - redis
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
