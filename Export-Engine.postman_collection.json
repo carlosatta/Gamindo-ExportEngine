@@ -7,8 +7,7 @@
   "variable": [
     { "key": "base_url", "value": "http://localhost:8000/api/v1" },
     { "key": "version_id", "value": "1" },
-    { "key": "export_id", "value": "1" },
-    { "key": "template_id", "value": "1" }
+    { "key": "export_id", "value": "1" }
   ],
   "item": [
     {
@@ -62,7 +61,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"email\": \"player@example.com\",\n    \"language\": \"it\",\n    \"utm_source\": \"google\",\n    \"company\": \"Acme\",\n    \"marketing_optin\": true,\n    \"registered_at\": \"2026-07-01T10:00:00Z\",\n    \"status\": \"active\"\n  }\n]",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"email\": \"player@example.com\",\n    \"language\": \"it\",\n    \"utm_source\": \"google\",\n    \"company\": \"Acme\",\n    \"marketing_optin\": true,\n    \"registered_at\": \"2026-01-15T10:00:00Z\",\n    \"status\": \"active\"\n  }\n]",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/players", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "players"] }
@@ -78,7 +77,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"type\": \"completed\",\n    \"occurred_at\": \"2026-07-01T10:05:00Z\",\n    \"payload\": {\n      \"score\": 100,\n      \"level\": 3,\n      \"language\": \"it\"\n    }\n  }\n]",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"type\": \"completed\",\n    \"occurred_at\": \"2026-01-15T10:05:00Z\",\n    \"payload\": {\n      \"score\": 100,\n      \"level\": 3,\n      \"language\": \"it\"\n    }\n  }\n]",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/events", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "events"] }
@@ -94,7 +93,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"transaction_id\": \"txn-1\",\n    \"type\": \"purchase\",\n    \"amount\": 9.99,\n    \"currency\": \"EUR\",\n    \"occurred_at\": \"2026-07-01T10:10:00Z\"\n  }\n]",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"transaction_id\": \"txn-1\",\n    \"type\": \"purchase\",\n    \"amount\": 9.99,\n    \"currency\": \"EUR\",\n    \"occurred_at\": \"2026-01-15T10:10:00Z\"\n  }\n]",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/transactions", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "transactions"] }
@@ -110,7 +109,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"question_id\": \"q1\",\n    \"question\": \"Favorite color?\",\n    \"answer\": \"blue\",\n    \"occurred_at\": \"2026-07-01T10:07:00Z\"\n  }\n]",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"question_id\": \"q1\",\n    \"question\": \"Favorite color?\",\n    \"answer\": \"blue\",\n    \"occurred_at\": \"2026-01-15T10:07:00Z\"\n  }\n]",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/answers", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "answers"] }
@@ -126,7 +125,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"reward_type\": \"coupon_10\",\n    \"reward_code\": \"SAVE10\",\n    \"assigned_at\": \"2026-07-01T10:12:00Z\"\n  }\n]",
+              "raw": "[\n  {\n    \"external_player_id\": \"ext-123\",\n    \"reward_type\": \"coupon_10\",\n    \"reward_code\": \"SAVE10\",\n    \"assigned_at\": \"2026-01-15T10:12:00Z\"\n  }\n]",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/rewards", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "rewards"] }
@@ -163,7 +162,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"format\": \"xlsx\",\n  \"date_from\": \"2026-01-01\",\n  \"date_to\": \"2026-12-31\",\n  \"sheets\": [\n    { \"name\": \"version_players\", \"columns\": [\"external_player_id\", \"language\", \"status\", \"registered_at\"] },\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"payload.score\"], \"filters\": [{ \"field\": \"type\", \"operator\": \"=\", \"value\": \"completed\" }], \"sort\": [{ \"field\": \"occurred_at\", \"direction\": \"desc\" }] }\n  ]\n}",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"date_from\": \"2026-01-01\",\n  \"date_to\": \"2026-01-31\",\n  \"sheets\": [\n    { \"name\": \"readme\" },\n    { \"name\": \"kpis\" },\n    { \"name\": \"players\" },\n    { \"name\": \"events_summary\", \"group_by\": [\"event_type\", \"language\", \"utm_source\"], \"metrics\": [{ \"fn\": \"count\", \"as\": \"events_count\" }, { \"fn\": \"count_distinct\", \"on\": \"player_id\", \"as\": \"unique_players\" }, { \"fn\": \"ratio\", \"num\": \"events_count\", \"den\": \"unique_players\", \"as\": \"events_per_player\" }, { \"fn\": \"avg\", \"on\": \"score\", \"as\": \"avg_score\" }] },\n    { \"name\": \"answers\", \"group_by\": [\"question_id\", \"question\", \"answer\"], \"metrics\": [{ \"fn\": \"count\", \"as\": \"answers_count\" }, { \"fn\": \"percentage\", \"partition\": \"question_id\", \"as\": \"percentage\" }] },\n    { \"name\": \"transactions\" },\n    { \"name\": \"configurazione_richiesta\" },\n    { \"name\": \"data_quality\" }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] }
@@ -179,7 +178,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"player_id\", \"payload.score\", \"payload.level\", \"payload.language\", \"payload.difficulty_rating\", \"payload.is_winner\", \"payload.last_action_at\", \"payload.note\"] },\n    { \"name\": \"transactions\", \"columns\": [\"transaction_id\", \"type\", \"amount\", \"currency\", \"occurred_at\"] },\n    { \"name\": \"version_players\", \"columns\": [\"external_player_id\", \"language\", \"utm_source\", \"status\", \"registered_at\"] }\n  ]\n}",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"players\", \"columns\": [\"player_id\", \"email\", \"registered_at\", \"language\", \"utm_source\", \"company\", \"total_score\", \"levels_completed\", \"events_count\", \"reward\", \"status\", \"marketing_optin\", \"revenue\"] },\n    { \"name\": \"transactions\", \"columns\": [\"transaction_id\", \"player_id\", \"email\", \"type\", \"amount\", \"language\", \"utm_source\", \"occurred_at\"] },\n    { \"name\": \"events_summary\", \"group_by\": [\"event_type\", \"language\", \"utm_source\"], \"metrics\": [{ \"fn\": \"count\", \"as\": \"events_count\" }, { \"fn\": \"count_distinct\", \"on\": \"player_id\", \"as\": \"unique_players\" }, { \"fn\": \"ratio\", \"num\": \"events_count\", \"den\": \"unique_players\", \"as\": \"events_per_player\" }, { \"fn\": \"avg\", \"on\": \"score\", \"as\": \"avg_score\" }] },\n    { \"name\": \"kpis\" },\n    { \"name\": \"data_quality\" }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports"] },
@@ -196,26 +195,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"events\", \"columns\": [\"type\", \"occurred_at\", \"payload.score\"] }\n  ]\n}",
+              "raw": "{\n  \"format\": \"xlsx\",\n  \"sheets\": [\n    { \"name\": \"players\", \"columns\": [\"player_id\", \"email\", \"total_score\"] }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports/preview", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports", "preview"] }
-          }
-        },
-        {
-          "name": "Create export from template",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"template_id\": {{template_id}}\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": { "raw": "{{base_url}}/versions/{{version_id}}/exports/from-template", "host": ["{{base_url}}"], "path": ["versions", "{{version_id}}", "exports", "from-template"] }
           }
         },
         {
@@ -240,67 +223,6 @@
             "method": "DELETE",
             "header": [ { "key": "Accept", "value": "application/json" } ],
             "url": { "raw": "{{base_url}}/exports/{{export_id}}", "host": ["{{base_url}}"], "path": ["exports", "{{export_id}}"] }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Templates",
-      "item": [
-        {
-          "name": "List templates",
-          "request": {
-            "method": "GET",
-            "header": [ { "key": "Accept", "value": "application/json" } ],
-            "url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
-          }
-        },
-        {
-          "name": "Create template",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Default players export\",\n  \"request_payload\": {\n    \"format\": \"xlsx\",\n    \"sheets\": [\n      {\n        \"name\": \"Players\",\n        \"columns\": [\"email\", \"total_score\", \"events_count\"]\n      }\n    ]\n  }\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
-          }
-        },
-        {
-          "name": "Show template",
-          "request": {
-            "method": "GET",
-            "header": [ { "key": "Accept", "value": "application/json" } ],
-            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
-          }
-        },
-        {
-          "name": "Update template",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Renamed template\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
-          }
-        },
-        {
-          "name": "Delete template",
-          "request": {
-            "method": "DELETE",
-            "header": [ { "key": "Accept", "value": "application/json" } ],
-            "url": { "raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"] }
           }
         }
       ]
