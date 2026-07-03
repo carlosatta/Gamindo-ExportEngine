@@ -21,7 +21,7 @@ class ExportApiTest extends TestCase
         return [
             'format' => 'xlsx',
             'sheets' => [
-                ['name' => 'version_players', 'columns' => ['external_player_id', 'status']],
+                ['name' => 'players', 'columns' => ['player_id', 'email']],
             ],
         ];
     }
@@ -107,6 +107,7 @@ class ExportApiTest extends TestCase
     public function test_job_generates_xlsx_and_completes()
     {
         Storage::fake('local');
+        $this->seed(\Database\Seeders\MappingSeeder::class);
         $version = Version::factory()->create();
         $player = Player::factory()->create();
         VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
@@ -128,6 +129,7 @@ class ExportApiTest extends TestCase
     public function test_job_tolerates_unknown_sheet_and_columns()
     {
         Storage::fake('local');
+        $this->seed(\Database\Seeders\MappingSeeder::class);
         $version = Version::factory()->create();
         $player = Player::factory()->create();
         VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
@@ -139,7 +141,7 @@ class ExportApiTest extends TestCase
                 'format' => 'xlsx',
                 'sheets' => [
                     ['name' => 'bogus_table', 'columns' => ['whatever']],
-                    ['name' => 'version_players', 'columns' => ['external_player_id', 'ghost_column']],
+                    ['name' => 'players', 'columns' => ['email', 'ghost_column']],
                 ],
             ],
         ]);

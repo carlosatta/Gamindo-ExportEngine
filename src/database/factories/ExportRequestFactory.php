@@ -18,7 +18,7 @@ class ExportRequestFactory extends Factory
             'format' => 'xlsx',
             'request_payload' => [
                 'format' => 'xlsx',
-                'sheets' => [['name' => 'version_players', 'columns' => ['external_player_id', 'status']]],
+                'sheets' => [['name' => 'players', 'columns' => ['player_id', 'email']]],
             ],
             'progress' => 0,
             'attempts' => 0,
