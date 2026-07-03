@@ -6,6 +6,9 @@
 .vscode/
 .impeccable/
 
+# macOS
+.DS_Store
+
 # Docker Compose local overrides and secrets
 .env
 docker-compose.override.yml
