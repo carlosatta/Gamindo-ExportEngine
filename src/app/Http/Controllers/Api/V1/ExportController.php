@@ -76,9 +76,4 @@ class ExportController extends Controller
     {
         return $this->notImplemented();
     }
-
-    public function fromTemplate(Request $request, Version $version)
-    {
-        return $this->notImplemented();
-    }
 }

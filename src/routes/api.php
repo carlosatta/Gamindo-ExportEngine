@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\V1\Ingestion\EventController;
 use App\Http\Controllers\Api\V1\Ingestion\PlayerController;
 use App\Http\Controllers\Api\V1\Ingestion\RewardController;
 use App\Http\Controllers\Api\V1\Ingestion\TransactionController;
-use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\VersionController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,17 +24,10 @@ Route::prefix('v1')->group(function () {
         Route::get('exports', [ExportController::class, 'index']);
         Route::post('exports', [ExportController::class, 'store']);
         Route::post('exports/preview', [ExportController::class, 'preview']);
-        Route::post('exports/from-template', [ExportController::class, 'fromTemplate']);
     });
 
     Route::get('exports', [ExportController::class, 'all']);
     Route::get('exports/{export}', [ExportController::class, 'show']);
     Route::get('exports/{export}/download', [ExportController::class, 'download']);
     Route::delete('exports/{export}', [ExportController::class, 'destroy']);
-
-    Route::get('templates', [TemplateController::class, 'index']);
-    Route::post('templates', [TemplateController::class, 'store']);
-    Route::get('templates/{template}', [TemplateController::class, 'show']);
-    Route::patch('templates/{template}', [TemplateController::class, 'update']);
-    Route::delete('templates/{template}', [TemplateController::class, 'destroy']);
 });
