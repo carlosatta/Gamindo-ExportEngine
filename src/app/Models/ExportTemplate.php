@@ -11,10 +11,10 @@ class ExportTemplate extends Model
 
     protected $fillable = [
         'name',
-        'request_payload',
+        'definition',
     ];
 
     protected $casts = [
-        'request_payload' => 'array',
+        'definition' => 'array',
     ];
 }

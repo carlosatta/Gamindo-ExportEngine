@@ -10,8 +10,8 @@ class CreateExportTemplatesTable extends Migration
     {
         Schema::create('export_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->longText('request_payload');
+            $table->string('name')->unique();
+            $table->longText('definition');
             $table->timestamps();
         });
     }

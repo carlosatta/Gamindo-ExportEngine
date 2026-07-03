@@ -12,16 +12,12 @@ class ExportTemplateFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->words(2, true),
-            'request_payload' => [
-                'format' => 'xlsx',
-                'sheets' => [
-                    [
-                        'name' => 'Players',
-                        'columns' => ['email', 'total_score', 'events_count'],
-                        'filters' => [],
-                        'sort' => [],
-                    ],
+            'name' => $this->faker->unique()->word(),
+            'definition' => [
+                'base' => 'version_players',
+                'columns' => [
+                    'email' => ['source' => 'players.email'],
+                    'status' => ['source' => 'version_players.status'],
                 ],
             ],
         ];

@@ -22,6 +22,8 @@ class StoreExportRequest extends FormRequest
             'sheets.*.columns' => ['nullable', 'array'],
             'sheets.*.filters' => ['nullable', 'array'],
             'sheets.*.sort' => ['nullable', 'array'],
+            'sheets.*.group_by' => ['nullable', 'array'],
+            'sheets.*.metrics' => ['nullable', 'array'],
         ];
     }
 }
