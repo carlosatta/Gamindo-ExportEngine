@@ -22,11 +22,6 @@ async function main() {
 
   await steps.runParallelExports(versionId, 30);
 
-
-  const templateId = await steps.createTemplate();
-  const templateExportId = await steps.requestExportFromTemplate(versionId, templateId);
-  await steps.runExportFlow(templateExportId);
-
   console.log("\nSimulazione conclusa.");
 }
 
