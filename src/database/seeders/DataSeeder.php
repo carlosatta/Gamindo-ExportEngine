@@ -14,6 +14,8 @@ abstract class DataSeeder extends Seeder
 
     protected function seedData(int $versionsCount, int $playersPerVersion, int $eventsPerPlayer)
     {
+        $this->call(MappingSeeder::class);
+
         $dispatcher = DB::connection()->getEventDispatcher();
         DB::connection()->unsetEventDispatcher();
 
@@ -77,7 +79,7 @@ abstract class DataSeeder extends Seeder
                 'updated_at' => $now,
             ]);
 
-            $fields[$definition['code']] = ['id' => $id, 'data_type' => $definition['data_type']];
+            $fields[$definition['code']] = ['id' => $id, 'data_type' => $definition['data_type'], 'code' => $definition['code']];
         }
 
         return $fields;
@@ -90,7 +92,7 @@ abstract class DataSeeder extends Seeder
 
         for ($i = 0; $i < $count; $i++) {
             $rows[] = [
-                'email' => 'player'.(++$this->emailCounter).'@demo.test',
+                'email' => sprintf('user%03d@example.test', ++$this->emailCounter),
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -112,7 +114,9 @@ abstract class DataSeeder extends Seeder
     {
         $maxId = (int) DB::table('version_players')->max('id');
         $languages = ['it', 'en', 'es', 'de', 'fr'];
-        $sources = ['google', 'facebook', 'organic', 'newsletter'];
+        $sources = ['google', 'direct', 'newsletter', 'partner', 'linkedin', 'qr_event'];
+        $companies = ['Hooli', 'Umbrella', 'Globex', 'Stark', 'Wayne', 'Wonka', 'Initech', 'Acme'];
+        $statuses = ['registered', 'started', 'completed', 'completed', 'completed'];
         $rows = [];
         $ext = 0;
 
@@ -121,12 +125,12 @@ abstract class DataSeeder extends Seeder
                 'version_id' => $versionId,
                 'player_id' => $playerId,
                 'external_player_id' => 'ext_'.$versionId.'_'.(++$ext),
-                'registered_at' => Carbon::now()->subDays(rand(0, 60))->toDateTimeString(),
+                'registered_at' => Carbon::create(2026, 1, 1)->addDays(rand(0, 27))->addMinutes(rand(0, 1439))->toDateTimeString(),
                 'language' => $languages[array_rand($languages)],
                 'utm_source' => $sources[array_rand($sources)],
-                'company' => null,
+                'company' => $companies[array_rand($companies)],
                 'marketing_optin' => rand(0, 1),
-                'status' => 'active',
+                'status' => $statuses[array_rand($statuses)],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -146,7 +150,7 @@ abstract class DataSeeder extends Seeder
 
     private function createEventsWithPayload(int $versionId, array $versionPlayers, int $eventsPerPlayer, array $fields, string $now)
     {
-        $types = ['opened', 'registered', 'completed', 'answer_submitted'];
+        $types = ['opened', 'registered', 'level_completed', 'game_completed', 'answer_submitted'];
         $rows = [];
         $total = 0;
 
@@ -184,7 +188,7 @@ abstract class DataSeeder extends Seeder
                     'player_id' => $vp->player_id,
                     'version_player_id' => $vp->id,
                     'type' => $types[array_rand($types)],
-                    'occurred_at' => Carbon::now()->subDays(rand(0, 30))->subMinutes(rand(0, 1440))->toDateTimeString(),
+                    'occurred_at' => Carbon::create(2026, 1, 1)->addDays(rand(0, 29))->addMinutes(rand(0, 1439))->toDateTimeString(),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -229,17 +233,28 @@ abstract class DataSeeder extends Seeder
                 $row['value_boolean'] = rand(0, 1);
                 break;
             case 'datetime':
-                $row['value_datetime'] = Carbon::now()->subDays(rand(0, 30))->toDateTimeString();
+                $row['value_datetime'] = Carbon::create(2026, 1, 1)->addDays(rand(0, 29))->toDateTimeString();
                 break;
             case 'text':
                 $row['value_text'] = 'Note '.rand(1, 99999);
                 break;
             default:
-                $row['value_string'] = ['it', 'en', 'es', 'google', 'facebook', 'organic'][array_rand(['it', 'en', 'es', 'google', 'facebook', 'organic'])];
+                $row['value_string'] = $this->stringValueFor($field['code']);
                 break;
         }
 
         return $row;
+    }
+
+    private function stringValueFor(string $code): string
+    {
+        $pools = [
+            'language' => ['it', 'en', 'es', 'de', 'fr'],
+            'utm_source' => ['google', 'direct', 'newsletter', 'partner', 'linkedin', 'qr_event'],
+        ];
+        $pool = $pools[$code] ?? ['a', 'b', 'c'];
+
+        return $pool[array_rand($pool)];
     }
 
     private function createSideEntities(int $versionId, array $versionPlayers, string $now)
@@ -262,7 +277,7 @@ abstract class DataSeeder extends Seeder
                     'type' => $txTypes[array_rand($txTypes)],
                     'amount' => rand(100, 20000) / 100,
                     'currency' => 'EUR',
-                    'occurred_at' => Carbon::now()->subDays(rand(0, 30))->toDateTimeString(),
+                    'occurred_at' => Carbon::create(2026, 1, 1)->addDays(rand(0, 29))->toDateTimeString(),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -277,7 +292,7 @@ abstract class DataSeeder extends Seeder
                     'question_id' => 'q'.$a,
                     'question' => 'Question '.$a,
                     'answer' => 'Answer '.rand(1, 4),
-                    'occurred_at' => Carbon::now()->subDays(rand(0, 30))->toDateTimeString(),
+                    'occurred_at' => Carbon::create(2026, 1, 1)->addDays(rand(0, 29))->toDateTimeString(),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -291,7 +306,7 @@ abstract class DataSeeder extends Seeder
                     'version_player_id' => $vp->id,
                     'reward_code' => strtoupper($type).'-'.rand(1000, 9999),
                     'reward_type' => $type,
-                    'assigned_at' => Carbon::now()->subDays(rand(0, 30))->toDateTimeString(),
+                    'assigned_at' => Carbon::create(2026, 1, 1)->addDays(rand(0, 29))->toDateTimeString(),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
