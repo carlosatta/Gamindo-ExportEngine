@@ -104,6 +104,28 @@ class ExportApiTest extends TestCase
         Storage::assertMissing('exports/export-x.xlsx');
     }
 
+    public function test_preview_returns_first_rows_synchronously()
+    {
+        $this->seed(\Database\Seeders\MappingSeeder::class);
+        $version = Version::factory()->create();
+        $player = Player::factory()->create(['email' => 'p@x.io']);
+        VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
+
+        $response = $this->postJson("/api/v1/versions/{$version->id}/exports/preview", [
+            'sheets' => [
+                ['name' => 'players', 'columns' => ['player_id', 'email']],
+            ],
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.limit', 100)
+            ->assertJsonPath('data.sheets.0.name', 'players')
+            ->assertJsonPath('data.sheets.0.headers.0', 'player_id')
+            ->assertJsonPath('data.sheets.0.rows.0.email', 'p@x.io');
+
+        $this->assertDatabaseCount('export_requests', 0);
+    }
+
     public function test_job_generates_xlsx_and_completes()
     {
         Storage::fake('local');
