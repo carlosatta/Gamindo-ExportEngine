@@ -71,8 +71,8 @@ class ExportEndToEndTest extends TestCase
         $this->assertEquals(['README', 'KPIs', 'Configurazione_Richiesta', 'Players', 'Events_Summary', 'Data_Quality'], $matches[1]);
         $this->assertStringNotContainsString('ghost_sheet', $workbook);
 
-        $this->assertStringContainsString('<f>', $kpisSheet);
-        $this->assertStringContainsString('COUNTA', $kpisSheet);
+        $this->assertStringNotContainsString('<f>', $kpisSheet);
+        $this->assertStringContainsString('<v>', $kpisSheet);
         $this->assertStringContainsString('<autoFilter', $playersSheet);
         $this->assertStringContainsStringIgnoringCase('1F4E78', $styles);
         $this->assertStringContainsStringIgnoringCase('FFE699', $styles);

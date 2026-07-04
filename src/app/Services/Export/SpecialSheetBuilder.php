@@ -29,7 +29,7 @@ class SpecialSheetBuilder
         return implode('_', $parts);
     }
 
-    public function build(string $name, Version $version, array $request, array $layouts = [])
+    public function build(string $name, Version $version, array $request)
     {
         switch ($name) {
             case 'readme':
@@ -37,7 +37,7 @@ class SpecialSheetBuilder
             case 'configurazione_richiesta':
                 return $this->configurazione($request);
             case 'kpis':
-                return $this->kpis($layouts);
+                return $this->kpis($version, $request);
             case 'data_quality':
                 return $this->dataQuality($version);
             default:
@@ -117,94 +117,94 @@ class SpecialSheetBuilder
         return $this->pairs(['parametro', 'valore'], $rows);
     }
 
-    private function kpis(array $layouts): array
+    private function kpis(Version $version, array $request): array
     {
-        $max = 100000;
+        $from = $request['date_from'] ?? null;
+        $to = $request['date_to'] ?? null;
+        $requested = [];
+        foreach (($request['sheets'] ?? []) as $sheet) {
+            if (is_array($sheet) && isset($sheet['name']) && is_string($sheet['name'])) {
+                $requested[$sheet['name']] = true;
+            }
+        }
 
         $rows = [];
-        if (isset($layouts['players'])) {
-            $rows[] = ['kpi' => 'Player esportati', 'value' => $this->counta($layouts, 'players', $max), 'formula' => 'Conteggio righe player'];
-            $rows[] = ['kpi' => 'Player completati', 'value' => $this->countifStatus($layouts, 'players', 'completed', $max), 'formula' => 'Status completed'];
-            $rows[] = ['kpi' => 'Completion rate', 'value' => '=IF(B2=0,0,B3/B2)', 'formula' => 'Player completati / player esportati'];
-            $rows[] = ['kpi' => 'Score totale', 'value' => $this->sumCol($layouts, 'players', 'total_score', $max), 'formula' => 'Somma score'];
-            $rows[] = ['kpi' => 'Score medio', 'value' => $this->avgCol($layouts, 'players', 'total_score', $max), 'formula' => 'Media score'];
+
+        if (isset($requested['players'])) {
+            $players = $this->periodCount('version_players', 'registered_at', $version, $from, $to);
+            $completed = $this->periodQuery('version_players', 'registered_at', $version, $from, $to)->where('status', 'completed')->count();
+            $totalScore = (int) $this->eventPayloadSum($version, $from, $to, 'score');
+            $rows[] = ['kpi' => 'Player esportati', 'value' => $players, 'formula' => 'Conteggio righe player'];
+            $rows[] = ['kpi' => 'Player completati', 'value' => $completed, 'formula' => 'Status completed'];
+            $rows[] = ['kpi' => 'Completion rate', 'value' => $players > 0 ? round($completed / $players, 4) : 0, 'formula' => 'Player completati / player esportati'];
+            $rows[] = ['kpi' => 'Score totale', 'value' => $totalScore, 'formula' => 'Somma payload.score'];
+            $rows[] = ['kpi' => 'Score medio', 'value' => $players > 0 ? round($totalScore / $players, 2) : 0, 'formula' => 'Score totale / player'];
         }
-        if (isset($layouts['events_summary'])) {
-            $rows[] = ['kpi' => 'Eventi totali aggregati', 'value' => $this->sumCol($layouts, 'events_summary', 'events_count', $max), 'formula' => 'Somma eventi aggregati'];
+        if (isset($requested['events_summary'])) {
+            $rows[] = ['kpi' => 'Eventi totali', 'value' => $this->periodCount('events', 'occurred_at', $version, $from, $to), 'formula' => 'Conteggio eventi'];
         }
-        if (isset($layouts['transactions'])) {
-            $rows[] = ['kpi' => 'Transazioni totali', 'value' => $this->counta($layouts, 'transactions', $max), 'formula' => 'Conteggio transazioni'];
-            $rows[] = ['kpi' => 'Valore transazioni', 'value' => $this->sumCol($layouts, 'transactions', 'amount', $max), 'formula' => 'Somma amount'];
+        if (isset($requested['transactions'])) {
+            $rows[] = ['kpi' => 'Transazioni totali', 'value' => $this->periodCount('transactions', 'occurred_at', $version, $from, $to), 'formula' => 'Conteggio transazioni'];
+            $rows[] = ['kpi' => 'Valore transazioni', 'value' => round((float) $this->periodQuery('transactions', 'occurred_at', $version, $from, $to)->sum('amount'), 2), 'formula' => 'Somma amount'];
         }
-        if (isset($layouts['answers'])) {
-            $rows[] = ['kpi' => 'Risposte totali', 'value' => $this->sumCol($layouts, 'answers', 'answers_count', $max), 'formula' => 'Somma risposte'];
+        if (isset($requested['answers'])) {
+            $rows[] = ['kpi' => 'Risposte totali', 'value' => $this->periodCount('answers', 'occurred_at', $version, $from, $to), 'formula' => 'Conteggio risposte'];
         }
-        if (isset($layouts['data_quality'])) {
-            $rows[] = ['kpi' => 'Errori data quality', 'value' => $this->sumifErrors($layouts, $max), 'formula' => 'Somma anomalie error'];
-        }
-        if (empty($rows)) {
-            $rows[] = ['kpi' => 'Nessun dato', 'value' => 0, 'formula' => 'Nessun foglio dati richiesto'];
-        }
+        $rows[] = ['kpi' => 'Errori data quality', 'value' => $this->dataQualityErrors($version), 'formula' => 'Anomalie di severita error'];
 
         return $this->pairs(['KPI', 'Valore', 'Formula / origine'], $rows);
     }
 
-    private function counta(array $layouts, string $sheet, int $max)
+    private function periodQuery(string $table, string $dateColumn, Version $version, $from, $to)
     {
-        return isset($layouts[$sheet]) ? "=COUNTA('".self::displayName($sheet)."'!A2:A".$max.')' : 0;
+        return DB::table($table)->where($table.'.version_id', $version->id)
+            ->when(! empty($from), function ($q) use ($table, $dateColumn, $from) {
+                $q->where($table.'.'.$dateColumn, '>=', $from);
+            })
+            ->when(! empty($to), function ($q) use ($table, $dateColumn, $to) {
+                $q->where($table.'.'.$dateColumn, '<=', $to);
+            });
     }
 
-    private function sumCol(array $layouts, string $sheet, string $col, int $max)
+    private function periodCount(string $table, string $dateColumn, Version $version, $from, $to): int
     {
-        $letter = $this->colLetter($layouts, $sheet, $col);
-
-        return $letter === null ? 0 : "=SUM('".self::displayName($sheet)."'!".$letter.'2:'.$letter.$max.')';
+        return $this->periodQuery($table, $dateColumn, $version, $from, $to)->count();
     }
 
-    private function avgCol(array $layouts, string $sheet, string $col, int $max)
+    private function eventPayloadSum(Version $version, $from, $to, string $code)
     {
-        $letter = $this->colLetter($layouts, $sheet, $col);
-
-        return $letter === null ? 0 : "=AVERAGE('".self::displayName($sheet)."'!".$letter.'2:'.$letter.$max.')';
-    }
-
-    private function countifStatus(array $layouts, string $sheet, string $value, int $max)
-    {
-        $letter = $this->colLetter($layouts, $sheet, 'status');
-
-        return $letter === null ? 0 : "=COUNTIF('".self::displayName($sheet)."'!".$letter.'2:'.$letter.$max.',"'.$value.'")';
-    }
-
-    private function sumifErrors(array $layouts, int $max)
-    {
-        $sev = $this->colLetter($layouts, 'data_quality', 'severity');
-        $cnt = $this->colLetter($layouts, 'data_quality', 'occurrences');
-        if ($sev === null || $cnt === null) {
+        $field = PayloadField::where('version_id', $version->id)
+            ->where('entity_type', 'event')
+            ->where('code', $code)
+            ->first();
+        if ($field === null) {
             return 0;
         }
-        $dq = self::displayName('data_quality');
 
-        return "=SUMIF('".$dq."'!".$sev.'2:'.$sev.$max.',"error",\''.$dq.'\'!'.$cnt.'2:'.$cnt.$max.')';
+        return $this->periodQuery('events', 'occurred_at', $version, $from, $to)
+            ->join('payload_values', function ($join) use ($field) {
+                $join->on('payload_values.entity_id', '=', 'events.id')
+                    ->where('payload_values.entity_type', '=', 'event')
+                    ->where('payload_values.payload_field_id', '=', $field->id);
+            })
+            ->sum('payload_values.value_integer');
     }
 
-    private function colLetter(array $layouts, string $sheet, string $column)
+    private function dataQualityErrors(Version $version): int
     {
-        if (! isset($layouts[$sheet])) {
-            return null;
-        }
-        $index = array_search($column, $layouts[$sheet], true);
-        if ($index === false) {
-            return null;
-        }
-        $n = $index + 1;
-        $letter = '';
-        while ($n > 0) {
-            $mod = ($n - 1) % 26;
-            $letter = chr(65 + $mod).$letter;
-            $n = intdiv($n - 1, 26);
-        }
+        $invalidOrder = DB::table('events')
+            ->join('version_players', 'version_players.id', '=', 'events.version_player_id')
+            ->where('events.version_id', $version->id)
+            ->whereIn('events.type', ['game_completed', 'level_completed'])
+            ->whereColumn('events.occurred_at', '<', 'version_players.registered_at')
+            ->count();
+        $orphan = DB::table('events')
+            ->leftJoin('version_players', 'version_players.id', '=', 'events.version_player_id')
+            ->where('events.version_id', $version->id)
+            ->whereNull('version_players.id')
+            ->count();
 
-        return $letter;
+        return $invalidOrder + $orphan;
     }
 
     private function dataQuality(Version $version): array

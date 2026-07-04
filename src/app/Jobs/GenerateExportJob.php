@@ -122,22 +122,8 @@ class GenerateExportJob implements ShouldQueue
         $autoFilters = [];
 
         $builtList = [];
-        $layouts = [];
         foreach ($sheets as $idx => $sheetConfig) {
-            $name = is_array($sheetConfig) ? ($sheetConfig['name'] ?? null) : null;
-            if ($name === 'kpis') {
-                continue;
-            }
-            $built = $this->buildSheet($mappingBuilder, $specialBuilder, $version, $payload, $sheetConfig, $dateFrom, $dateTo);
-            $builtList[$idx] = $built;
-            if ($built !== null && is_string($name)) {
-                $layouts[$name] = $built['headers'];
-            }
-        }
-        foreach ($sheets as $idx => $sheetConfig) {
-            if (is_array($sheetConfig) && ($sheetConfig['name'] ?? null) === 'kpis') {
-                $builtList[$idx] = $specialBuilder->build('kpis', $version, $payload, $layouts);
-            }
+            $builtList[$idx] = $this->buildSheet($mappingBuilder, $specialBuilder, $version, $payload, $sheetConfig, $dateFrom, $dateTo);
         }
 
         foreach ($sheets as $idx => $sheetConfig) {
