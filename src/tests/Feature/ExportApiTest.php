@@ -148,6 +148,68 @@ class ExportApiTest extends TestCase
         Storage::assertExists($export->file_path);
     }
 
+    public function test_job_tolerates_garbage_payload()
+    {
+        Storage::fake('local');
+        $this->seed(\Database\Seeders\MappingSeeder::class);
+        $version = Version::factory()->create();
+        $player = Player::factory()->create();
+        VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
+
+        $export = ExportRequest::factory()->create([
+            'version_id' => $version->id,
+            'status' => 'pending',
+            'request_payload' => [
+                'format' => 'xlsx',
+                'sheets' => [
+                    ['name' => 'does_not_exist', 'columns' => ['nope']],
+                    ['name' => 'players', 'columns' => ['player_id', 'ghost', 'payload.missing'], 'filters' => ['unknown_field' => 'x', 'language' => 'it'], 'sort' => ['ghost:desc', 'total_score:desc']],
+                    ['name' => 'events_summary', 'group_by' => ['nonexistent', 'payload.missing'], 'metrics' => [['fn' => 'frobnicate', 'as' => 'weird'], ['fn' => 'count', 'as' => 'n']]],
+                    ['name' => 'transactions', 'columns' => ['ghost_only']],
+                ],
+            ],
+        ]);
+
+        (new GenerateExportJob($export->id))->handle();
+
+        $export->refresh();
+        $this->assertEquals('completed', $export->status);
+        Storage::assertExists($export->file_path);
+    }
+
+    public function test_preview_tolerates_garbage_payload()
+    {
+        $this->seed(\Database\Seeders\MappingSeeder::class);
+        $version = Version::factory()->create();
+        $player = Player::factory()->create();
+        VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
+
+        $this->postJson("/api/v1/versions/{$version->id}/exports/preview", [
+            'sheets' => [
+                ['name' => 'ghost_table', 'columns' => ['nope']],
+                ['name' => 'players', 'columns' => ['player_id', 'ghost', 'payload.nope'], 'filters' => ['bogus' => 'x'], 'sort' => ['bogus:desc']],
+                ['name' => 'events_summary', 'group_by' => ['bogus'], 'metrics' => [['fn' => 'nonsense', 'as' => 'z']]],
+            ],
+        ])->assertStatus(200)->assertJsonPath('data.limit', 100);
+    }
+
+    public function test_export_validation_rejects_malformed_shapes()
+    {
+        $version = Version::factory()->create();
+
+        $this->postJson("/api/v1/versions/{$version->id}/exports", ['format' => 'xlsx', 'sheets' => [['name' => 'players', 'columns' => 'not-an-array']]])
+            ->assertStatus(422)->assertJsonValidationErrors('sheets.0.columns');
+
+        $this->postJson("/api/v1/versions/{$version->id}/exports", ['format' => 'xlsx', 'sheets' => [['columns' => ['a']]]])
+            ->assertStatus(422)->assertJsonValidationErrors('sheets.0.name');
+
+        $this->postJson("/api/v1/versions/{$version->id}/exports", ['format' => 'pdf', 'sheets' => [['name' => 'players']]])
+            ->assertStatus(422)->assertJsonValidationErrors('format');
+
+        $this->postJson("/api/v1/versions/{$version->id}/exports", ['format' => 'xlsx', 'date_from' => 'not-a-date', 'sheets' => [['name' => 'players']]])
+            ->assertStatus(422)->assertJsonValidationErrors('date_from');
+    }
+
     public function test_job_tolerates_unknown_sheet_and_columns()
     {
         Storage::fake('local');
