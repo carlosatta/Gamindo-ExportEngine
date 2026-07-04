@@ -250,6 +250,39 @@ class ExportMappingTest extends TestCase
         $this->assertEquals('a long note', $row['p_txt']);
     }
 
+    public function test_eav_flags_gate_filter_sort_and_aggregate()
+    {
+        $version = Version::factory()->create();
+        $player = Player::factory()->create();
+        $vp = VersionPlayer::factory()->create(['version_id' => $version->id, 'player_id' => $player->id]);
+        $tier = PayloadField::factory()->create([
+            'version_id' => $version->id, 'entity_type' => 'event', 'code' => 'tier', 'data_type' => 'string',
+            'is_filterable' => false, 'is_sortable' => false, 'is_aggregatable' => false,
+        ]);
+        $price = PayloadField::factory()->create([
+            'version_id' => $version->id, 'entity_type' => 'event', 'code' => 'price', 'data_type' => 'decimal',
+            'is_aggregatable' => false,
+        ]);
+        foreach ([['gold', 10.0], ['silver', 20.0]] as $pair) {
+            [$tierValue, $priceValue] = $pair;
+            $event = Event::factory()->create(['version_id' => $version->id, 'player_id' => $player->id, 'version_player_id' => $vp->id, 'type' => 'purchase']);
+            PayloadValue::factory()->create(['version_id' => $version->id, 'payload_field_id' => $tier->id, 'entity_type' => 'event', 'entity_id' => $event->id, 'value_string' => $tierValue, 'value_integer' => null]);
+            PayloadValue::factory()->create(['version_id' => $version->id, 'payload_field_id' => $price->id, 'entity_type' => 'event', 'entity_id' => $event->id, 'value_decimal' => $priceValue, 'value_integer' => null]);
+        }
+
+        $template = ['base' => 'events', 'columns' => ['tier' => ['payload' => 'tier'], 'price' => ['payload' => 'price']]];
+
+        $filtered = (new MappingSheetBuilder())->build($version, $template, ['columns' => ['tier', 'price'], 'filters' => ['tier' => 'gold']]);
+        $this->assertEquals(2, $filtered['query']->count());
+
+        $summary = (new MappingSheetBuilder())->build($version, $template, [
+            'group_by' => ['tier'],
+            'metrics' => [['fn' => 'avg', 'on' => 'price', 'as' => 'avg_price'], ['fn' => 'count', 'as' => 'n']],
+        ]);
+        $this->assertNotContains('avg_price', $summary['headers']);
+        $this->assertContains('n', $summary['headers']);
+    }
+
     public function test_eav_aggregate_and_group_by_on_typed_payload()
     {
         $version = Version::factory()->create();

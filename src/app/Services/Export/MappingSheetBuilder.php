@@ -31,6 +31,47 @@ class MappingSheetBuilder
         return $this->buildDetail($version, $template, $sheet, $dateFrom, $dateTo);
     }
 
+    public function previewRows(array $built, int $limit): array
+    {
+        if (isset($built['query'])) {
+            $raw = $built['query']->limit($limit)->get()->map(function ($row) {
+                return (array) $row;
+            })->all();
+        } else {
+            $raw = array_slice($built['rows'] ?? [], 0, $limit);
+        }
+
+        $formats = $built['formats'] ?? [];
+        $maps = $built['maps'] ?? [];
+        $defaults = $built['defaults'] ?? [];
+        $headers = $built['headers'] ?? [];
+        $keys = $built['keys'] ?? [];
+
+        $out = [];
+        foreach ($raw as $row) {
+            $assoc = [];
+            foreach ($keys as $i => $key) {
+                $value = $row[$key] ?? null;
+                if ($value === null && array_key_exists($key, $defaults)) {
+                    $value = $defaults[$key];
+                }
+                if ($value !== null) {
+                    if (isset($maps[$key])) {
+                        $value = $maps[$key][(string) $value] ?? $value;
+                    } elseif (isset($formats[$key])) {
+                        $value = sprintf($formats[$key], $value);
+                    } elseif (is_numeric($value)) {
+                        $value = $value + 0;
+                    }
+                }
+                $assoc[$headers[$i]] = $value;
+            }
+            $out[] = $assoc;
+        }
+
+        return $out;
+    }
+
     private function buildDetail(Version $version, array $template, array $sheet, $dateFrom, $dateTo)
     {
         $config = EntityRegistry::get($template['base']);
@@ -145,7 +186,10 @@ class MappingSheetBuilder
 
         $outputMetrics = [];
         foreach ($metrics as $metric) {
-            $outputMetrics[] = $metric['name'];
+            $name = $metric['name'];
+            if (isset($sqlMetrics[$name]) || isset($postMetrics[$name])) {
+                $outputMetrics[] = $name;
+            }
         }
         $rows = $this->applyPostMetrics($rows, $postMetrics, $keys);
 
@@ -259,7 +303,7 @@ class MappingSheetBuilder
             }
             if (is_string($on) && strpos($on, 'payload.') === 0) {
                 $field = $this->payloadField($version, $aggConfig['entity_type'], substr($on, strlen('payload.')));
-                if ($field === null) {
+                if ($field === null || ! $field->is_aggregatable) {
                     return null;
                 }
                 $valueColumn = $this->valueColumns[$field->data_type] ?? 'value_string';
@@ -322,6 +366,10 @@ class MappingSheetBuilder
         }
         $on = $metric['on'] ?? null;
         if (! is_string($on)) {
+            return null;
+        }
+        $pf = $this->payloadFieldFor($config, $template, $version, $on);
+        if ($pf !== null && ! $pf->is_aggregatable) {
             return null;
         }
         $col = $this->resolveColumn($query, $config, $version, $template, $on, $ctx);
@@ -394,12 +442,34 @@ class MappingSheetBuilder
             if ($value === '*' || $value === null || ! is_string($field)) {
                 continue;
             }
+            $pf = $this->payloadFieldFor($config, $template, $version, $field);
+            if ($pf !== null && ! $pf->is_filterable) {
+                continue;
+            }
             $col = $this->resolveColumn($query, $config, $version, $template, $field, $ctx);
             if ($col === null || $col['kind'] !== 'scalar') {
                 continue;
             }
             $query->whereRaw($col['ref'].' = ?', [$value]);
         }
+    }
+
+    private function payloadFieldFor(array $config, array $template, Version $version, string $name)
+    {
+        $code = null;
+        if (strpos($name, 'payload.') === 0) {
+            $code = substr($name, strlen('payload.'));
+        } else {
+            $columns = $template['columns'] ?? [];
+            if (isset($columns[$name]['payload'])) {
+                $code = $columns[$name]['payload'];
+            }
+        }
+        if (! is_string($code)) {
+            return null;
+        }
+
+        return $this->payloadField($version, $config['entity_type'] ?? '', $code);
     }
 
     private function applySort($query, array $config, Version $version, array $template, $sort, array &$ctx): void
@@ -415,6 +485,10 @@ class MappingSheetBuilder
             $direction = strtolower($parts[1] ?? 'asc');
             if (! in_array($direction, ['asc', 'desc'], true)) {
                 $direction = 'asc';
+            }
+            $pf = $this->payloadFieldFor($config, $template, $version, $parts[0]);
+            if ($pf !== null && ! $pf->is_sortable) {
+                continue;
             }
             $col = $this->resolveColumn($query, $config, $version, $template, $parts[0], $ctx);
             if ($col === null || $col['kind'] !== 'scalar') {
