@@ -12,6 +12,11 @@ abstract class DataSeeder extends Seeder
 
     private $emailCounter = 0;
 
+    public function runParametric(int $versionsCount, int $playersPerVersion, int $eventsPerPlayer)
+    {
+        $this->seedData($versionsCount, $playersPerVersion, $eventsPerPlayer);
+    }
+
     protected function seedData(int $versionsCount, int $playersPerVersion, int $eventsPerPlayer)
     {
         $this->call(MappingSeeder::class);
