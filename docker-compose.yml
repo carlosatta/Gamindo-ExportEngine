@@ -35,7 +35,9 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     restart: unless-stopped
-    entrypoint: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--timeout=360", "--max-jobs=1000"]
+    entrypoint: php artisan queue:work redis --sleep=${QUEUE_SLEEP:-3} --timeout=${QUEUE_TIMEOUT:-360} --max-jobs=${QUEUE_MAX_JOBS:-1000}
+    deploy:
+      replicas: ${EXPORT_WORKER_CONCURRENCY:-2}
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_DEBUG: ${APP_DEBUG:-true}
