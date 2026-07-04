@@ -182,7 +182,7 @@ usable in filters/sort/metrics if the matching flag is true.
 | Sheet                    | Type        |
 |--------------------------|-------------|
 | README                   | export metadata |
-| KPIs                     | aggregate (Excel formulas referencing the other sheets) |
+| KPIs                     | aggregate (static values computed via SQL) |
 | Configurazione_Richiesta | request dump |
 | Players                  | detail with calculated cross-table columns |
 | Events_Summary           | aggregate (group by type + payload fields) |
@@ -208,8 +208,21 @@ An example output is committed at [`examples/export-example.xlsx`](examples/expo
   mixed types can give inconsistent results.
 - `language` and `utm_source` on events are payload values and may differ from the
   player values in `version_players`.
-- KPIs use Excel formulas that reference the other sheets (so they recalculate in
-  the file); the demo/example data uses a fixed **January 2026** period across the
-  seeder, the client fixtures and the Postman examples.
+- KPIs are static values computed via SQL (not Excel formulas). The demo/example
+  data uses a fixed **January 2026** period across the seeder, the client fixtures
+  and the Postman examples.
 - After changing PHP code, restart the queue worker (`docker compose restart worker`);
   Laravel workers do not hot-reload code.
+
+## Queue workers and concurrency
+
+Export jobs run on Redis queue workers. The maximum number of exports processed
+in parallel is the number of worker replicas, configurable via Compose env
+(shell or a repo-root `.env`, see `.env.example`):
+
+```bash
+# run 4 workers in parallel
+EXPORT_WORKER_CONCURRENCY=4 docker compose up -d worker
+```
+
+`QUEUE_SLEEP`, `QUEUE_TIMEOUT` and `QUEUE_MAX_JOBS` tune `queue:work` the same way.
