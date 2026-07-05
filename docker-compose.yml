@@ -29,6 +29,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - ./src:/var/www
+    depends_on:
+      - mysql
+      - redis
 
   worker:
     build:
